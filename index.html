@@ -17,22 +17,46 @@
 
   <div class="section">
     <label>Titel: <input type="text" id="titel"></label>
+    <label>Author: <input type="text" id="author"></label>
+    <label>Rezept-Typ: 
+      <select id="rezepttyp">
+        <option>Vorspeise</option>
+        <option>Hauptspeise</option>
+        <option>Nachspeise</option>
+        <option>Getränk</option>
+        <option>Backen</option>
+        <option>Aufstrich</option>
+        <option>Sonstiges</option>
+      </select>
+    </label>
     <label>Portionen: <input type="text" id="portionen"></label>
     <label>Gesamtzeit (Minuten): <input type="number" id="zeit"></label>
     <label>Komplexität: 
       <select id="komplexitaet">
-        <option>einfach</option>
-        <option>mittel</option>
-        <option>schwer</option>
+        <option>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+        <option>5</option>
       </select>
     </label>
-    <label>Tags (kommagetrennt, z.B. vegan, vegetarisch):
+    <label>Vegan oder Vegetarisch: 
+      <select id="vegan">
+        <option>Vegetarisch</option>
+        <option>Vegan</option>
+        <option>Beides</option>
+      </select>
+    </label>
+    <label>Tags (optional):
       <input type="text" id="tags">
     </label>
   </div>
 
   <div class="section">
     <h3>Zutaten</h3>
+    <div>
+    Menge | Zutat
+    </div>
     <div id="zutaten-list"></div>
     <button onclick="addZutat()">+ Zutat</button>
   </div>
@@ -85,9 +109,12 @@
     function exportiereJSON() {
       const rezept = {
         titel: document.getElementById('titel').value,
+        author: document.getElementById('author').value,
+        rezepttyp: document.getElementById('rezepttyp').value,
         portionen: document.getElementById('portionen').value,
         gesamtzeit_minuten: parseInt(document.getElementById('zeit').value),
         komplexität: document.getElementById('komplexitaet').value,
+        vegan: document.getElementById('vegan').value,
         tags: document.getElementById('tags').value.split(',').map(t => t.trim()),
         zutaten: [],
         zubereitung: []
