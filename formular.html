@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rezeptformular</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; max-width: 800px; margin: auto; }
+    input, textarea, select, button { margin: 0.5em 0; padding: 0.5em; width: 100%; }
+    .section { margin-bottom: 2em; }
+    .inline { display: flex; gap: 0.5em; }
+    .inline > * { flex: 1; }
+    .zutat-container, .schritt-container { margin-bottom: 1em; border: 1px solid #ddd; padding: 1em; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Rezept eingeben</h1>
+
+  <div class="section">
+    <label>Titel: <input type="text" id="titel"></label>
+    <label>Portionen: <input type="text" id="portionen"></label>
+    <label>Gesamtzeit (Minuten): <input type="number" id="zeit"></label>
+    <label>Komplexität: 
+      <select id="komplexitaet">
+        <option>einfach</option>
+        <option>mittel</option>
+        <option>schwer</option>
+      </select>
+    </label>
+    <label>Tags (kommagetrennt, z.B. vegan, vegetarisch):
+      <input type="text" id="tags">
+    </label>
+  </div>
+
+  <div class="section">
+    <h3>Zutaten</h3>
+    <div id="zutaten-list"></div>
+    <button onclick="addZutat()">+ Zutat</button>
+  </div>
+
+  <div class="section">
+    <h3>Zubereitungsschritte</h3>
+    <div id="schritte-list"></div>
+    <button onclick="addSchritt()">+ Schritt</button>
+  </div>
+
+  <button onclick="exportiereJSON()">JSON herunterladen</button>
+  <pre id="output" style="white-space: pre-wrap; background: #f8f8f8; padding: 1em; margin-top: 2em;"></pre>
+
+  <script>
+    function addZutat() {
+      const container = document.createElement('div');
+      container.className = 'zutat-container';
+      container.innerHTML = `
+        <div class="inline">
+          <input placeholder="Menge (z.B. 200 g)" class="menge">
+          <input placeholder="Zutat (z.B. Mehl)" class="zutat">
+        </div>
+      `;
+      document.getElementById('zutaten-list').appendChild(container);
+    }
+
+    function addSchritt() {
+      const container = document.createElement('div');
+      container.className = 'schritt-container';
+      container.innerHTML = `
+        <textarea placeholder="Beschreibung des Schritts" class="beschreibung"></textarea>
+        <h4>Verwendete Zutaten</h4>
+        <div class="verwendete-zutaten"></div>
+        <button type="button" onclick="addVerwendeteZutat(this)">+ Zutat im Schritt</button>
+      `;
+      document.getElementById('schritte-list').appendChild(container);
+    }
+
+    function addVerwendeteZutat(button) {
+      const zutatenDiv = button.previousElementSibling;
+      const container = document.createElement('div');
+      container.className = 'inline';
+      container.innerHTML = `
+        <input placeholder="Menge (z.B. 200 g)" class="menge">
+        <input placeholder="Zutat (z.B. Mehl)" class="zutat">
+      `;
+      zutatenDiv.appendChild(container);
+    }
+
+    function exportiereJSON() {
+      const rezept = {
+        titel: document.getElementById('titel').value,
+        portionen: document.getElementById('portionen').value,
+        gesamtzeit_minuten: parseInt(document.getElementById('zeit').value),
+        komplexität: document.getElementById('komplexitaet').value,
+        tags: document.getElementById('tags').value.split(',').map(t => t.trim()),
+        zutaten: [],
+        zubereitung: []
+      };
+
+      document.querySelectorAll('#zutaten-list .zutat-container').forEach(div => {
+        rezept.zutaten.push({
+          menge: div.querySelector('.menge').value,
+          zutat: div.querySelector('.zutat').value
+        });
+      });
+
+      document.querySelectorAll('#schritte-list .schritt-container').forEach((div, index) => {
+        const verwendete = [];
+        div.querySelectorAll('.verwendete-zutaten .inline').forEach(z => {
+          verwendete.push({
+            menge: z.querySelector('.menge').value,
+            zutat: z.querySelector('.zutat').value
+          });
+        });
+        rezept.zubereitung.push({
+          schritt: index + 1,
+          beschreibung: div.querySelector('.beschreibung').value,
+          verwendete_zutaten: verwendete
+        });
+      });
+
+      const json = JSON.stringify(rezept, null, 2);
+      document.getElementById('output').textContent = json;
+
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${rezept.titel || 'rezept'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Starte mit einem Eintrag
+    addZutat();
+    addSchritt();
+  </script>
+</body>
+</html>
